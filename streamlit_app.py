@@ -43,16 +43,16 @@ if selection == 'Description':
     st.markdown("<p style='text-align: center; color: black;'> Son but est de prédire la probabilité de pluie du lendemain pour \
                 un habitant australien.</p>", unsafe_allow_html=True)
 
-    #image = Image.open('drapeau.png')
+    image = Image.open('drapeau.png')
 
-    # Pour centrer l'image
-    #col1, col2, col3 = st.columns(3)
-    #with col1:
-        #st.write(' ')
-    #with col2:
-        #st.image(image, caption='Australie')
-    #with col3:
-        #st.write(' ')
+    #Pour centrer l'image
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write(' ')
+    with col2:
+        st.image(image, caption='Australie')
+    with col3:
+        st.write(' ')
 
     st.write("-------------------------------------------------")
     
@@ -371,6 +371,83 @@ if selection == 'Description':
         </h0>""", unsafe_allow_html=True)
     
     st.markdown("<h1 style='text-align: center; color: black;'>Comment avons-nous préparer les données pour notre modèle de prédiction ?</h1>", unsafe_allow_html=True)
+
+    st.markdown('''<h0 style='text-align: center; color: black;'>L’exploration des données a montré que 7 étapes de prétraitement sont à minima nécessaires afin de disposer d’une base de données
+ « propre » permettant un bon apprentissage des modèles de machine learning :
+* La suppression des labels sans étiquettes
+* La suppression des variables dont le nombre de valeurs manquantes est supérieur à 40%
+* L’identification et la suppression des outliers
+* Le traitement des valeurs manquantes de l’ensemble des variables,
+* La transformation des variables catégorielles en variables indicatrices,
+* La normalisation des données,
+* Le rééquilibrage des classes.</h0>''', unsafe_allow_html=True)
+
+    with st.expander("Suppressions des labels sans étiquettes"):
+            st.markdown("""<h0 style='text-align: center; color: black;'>
+        Dans un premier temps nous  supprimons les lignes dont les labels ne sont pas étiquetés.  
+        Nous supprimons également les variables dont plus de 40% des valeurs sont manquantes. Les variables suivantes sont concernées: 'Evaporation','Sunshine','Cloud3pm'.</h0>""", unsafe_allow_html=True)
+
+    with st.expander("Identification et suppression des outliers"):
+         st.markdown("""<h0 style='text-align: center; color: black;'>Préalablement au traitement des valeurs manquantes, il faut supprimer les outliers qui peuvent avoir un impact sur les valeurs qui seront imputées.  
+        Pour l’identification des outliers nous avons utilisé la méthode Inter Quartile Range (IQR) qui se calcul de la manière suivante:  
+        IQR = Q3 - Q1  
+        où :  
+        Q1 est défini comme le nombre intermédiaire entre le plus petit nombre et la médiane de l’ensemble de données.  
+        Q3 est la valeur médiane entre la médiane et la valeur la plus élevée de l’ensemble de données.  
+        Avec l’IQR nous pouvons fixer la limite supérieure et inférieure d’un ensemble de valeurs pour une variable, de la manière suivante:  
+        supérieur = Q3 +IQR  
+        inférieur = Q1 – IQR  
+        L’identification des outliers se fait pour chaque variable continue, mais en fonction de la variable ‘State’,
+         car la zone géographique joue un rôle important sur les valeurs des variables.</h0>""", unsafe_allow_html=True)
+ 
+
+    with st.expander("Imputation des valeurs manquantes"):
+         st.markdown("""<h0 style='text-align: center; color: black;'>Le traitement des valeurs manquantes a fait l’objet de 2 stratégies :  
+
+        Imputation avec la méthode KNNImputer de Sklearn : la valeur manquante d’une variable pour une observation donnée est remplacée par la moyenne de ses
+         k plus proches voisins trouvés par l’algorithme k-Nearest Neighbors, les plus proches voisins étant les observations qui sont proches vis-à-vis des
+          valeurs des autres variables non manquantes. Le nombre de voisins choisis est k = 2.
+        Imputation par la moyenne pour les variables numériques et par la modalité la plus fréquente pour les variables catégorielles.  
+        Chacune de ces méthodes de traitement fait l’objet d’une sauvegarde sous forme de fichier « csv », l’idée étant de pouvoir comparer l’impact de ces 2
+         stratégies sur les performances des modèles de machine learning testés plus tard en chargeant l’un ou l’autre des fichiers.</h0>""", unsafe_allow_html=True)
+
+
+    with st.expander("Numérisation des variables"):
+         st.markdown("""<h0 style='text-align: center; color: black;'>Afin de permettre la prise en compte des variables catégorielles dans l'entraînement de certains modèles (les SVM en particulier, la régression logistique
+        ou encore l’algorithme des k plus proches voisins), il est nécessaire de transformer les modalités de celles-ci en valeurs numériques.  
+        Pour cela, plusieurs possibilités existent en préprocessing des données :   
+
+        * La méthode « get_dummies », qui permet de créer autant de colonnes que de modalités pour une seule variable, en y associant la valeur de 1 lorsque
+         la modalité est présente, et 0 si non. Cette méthode n’a pas été retenue : en effet, on constate une augmentation significative des variables (de 27 à environ 120)  
+        * La méthode  « LabelEncoder », qui permet d’assigner à chaque modalité d’une variable un entier compris entre 0 et le nombre de modalités de la variable
+        moins 1. C’est cette méthode qui est retenue ici : elle a le mérite de ne pas conduire à une augmentation du nombre de variables.  
+        A noter que la variable cible « RainTomorrow » est également encodée : la modalité « No » est remplacée par la valeur 0, et la modalité « Yes » par la valeur 1.</h0>""", unsafe_allow_html=True)
+
+
+
+    with st.expander("Normalisation des données"):
+         st.markdown("""<h0 style='text-align: center; color: black;'>Les variables à disposition présentent des plages de variation qui peuvent s’avérer assez éloignées. Comme le montre le graphique en boîtes à moustaches suivant, les variables de pression « Pressure9am » et « Pressure3pm » ont des plages de variations autour de 1000, tandis que pour le reste des variables, on est plutôt en moyenne autour de la dizaine, ou la centaine.  
+        Un extrait de la méthode « describe » de Pandas, appliquée à notre DataFrame, permet de visualiser ces plages de variations :  </h0>""", unsafe_allow_html=True)
+         st.markdown("""<h0 style='text-align: center; color: black;'>Afin de ne pas avoir de variable qui écrase les autres et qu’elle prenne un poids trop important dans la décision d’un modèle du fait de sa valeur (notamment en régression), on procède à une normalisation des données. On utilise pour cela la méthode « StandardScaler », qui consiste à soustraire la moyenne et à diviser par l’écart type l’ensemble des valeurs de la variable.   
+        À l'issue de ce traitement, l’ensemble des variables explicatives de notre dataset sont de moyenne nulle et de variance 1.</h0>""", unsafe_allow_html=True)
+
+
+
+
+    with st.expander("Rééquilibrage des classes"):
+         st.markdown("""<h0 style='text-align: center; color: black;'>Comme vu précédemment, le nombre de données correspondant à la classe « Yes » de la variable cible
+          « RainTomorrow » est nettement inférieur à la classe « No ». Si ce déséquilibre semble naturel et peut s’expliquer d’un point de vue météorologique (globalement sur une année, le nombre de jours sans pluie est souvent supérieur au nombre de jours avec pluie), il est en revanche problématique dans le cadre de l'entraînement des modèles de machine learning : un modèle pourra avoir un score en apparence élevé rien qu’en réalisant les bonnes prédictions sur la classe majoritaire.  
+        Le rééquilibrage des classes est réalisé de plusieurs façons :  
+        * Utilisation du paramètre « class_weight » associé aux modèles. L’intérêt est que cela ne nécessite pas d’action supplémentaire. En revanche cette option n’est pas
+        disponible sur tous les modèles de machine learning  
+        * Utilisation de la méthode SMOTE, qui est une méthode « d’over sampling » consistant à augmenter artificiellement le nombre d’observations de la classe minoritaire.
+        Concrètement, on détermine les k plus proches voisins d’une observation minoritaire, puis on sélectionne l’un de ses k voisins, pour enfin créer une nouvelle observation située entre notre observation et le voisin sélectionné.  
+        Typiquement, les algorithmes de Régression logistique, les SVM et le RandomForest embarquent le paramètre « class_weight », mais ce n’est pas le cas de l’algorithme
+        de classification par les k plus proches voisins.
+        </h0>""", unsafe_allow_html=True)
+
+
+
 
 elif selection == 'Réaliser une prédiction':
     st.markdown("<h1 style='text-align: center; color: black;'>Ok Python : do I need to take my umbrella tomorrow ?</h1>", unsafe_allow_html=True)
