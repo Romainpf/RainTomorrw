@@ -615,7 +615,7 @@ elif selection == 'Réaliser une prédiction':
     def get_day(date):
         splits = date.split('-')    
         day = splits[2]
-    return day
+        return day
 
     def get_month(date):
         return date.split('-')[1]
@@ -624,7 +624,7 @@ elif selection == 'Réaliser une prédiction':
         return date.split('-')[0]   
     
     # Application des fonctions
-    day = X_new['Date].apply(get_day)
+    day = X_new['Date'].apply(get_day)
     month = X_new['Date'].apply(get_month)
     year = X_new['Date'].apply(get_year)
     
