@@ -89,34 +89,65 @@ if selection == 'Description':
     En effet, nous avons constaté aux cours des différentes itérations que nos modèles prédictifs étaient plus robustes, sans ces variables. 
     L’imputation d’un grand nombre de valeurs en remplacement des NaN a une incidence sur la qualité de l’apprentissage de nos modèles.</h0>""", unsafe_allow_html=True)
 
-    st.markdown("""<h0 style='text-align: center; color: black;'>L'Australie étant un pays immense, le climat varie d'une région à une autre. Pour faciliter l'interprétation des données il parait important d'ajouter une variable "state" au dataset qui permettra de regrouper les localités en 8 zones géographiques.
-    Nous ajoutons également les coordonnées géographiques de chaque ville afin de pouvoir les représenter
-    sur une carte.</h0>""", unsafe_allow_html=True)
-
     #création d'une carte avec la position de chaque point de la variable "Location" du dataset
 
     #importation du fichier CSV contenant les données géographiques des villes du Dataset "weatherAUS".
     #les variables latitude et longitude ont été récupérées en connectant à l'API de googlemap
     df_ville = pd.read_csv("geocoordonnees.csv",index_col=0)
-
     #définition des variables correspondant à la latitude et la longitude de l'Australie
     lat = -27.157944693150345
     lng = 133.55059052037544
-
     map_options = GMapOptions(lat=lat, lng=lng, map_type="terrain", zoom=4)
-
     p =gmap("AIzaSyC989eZT8qV1z5p3LqYpGa1KkwuqCLucJM", map_options, title="Localisation des différentes villes du dataset")
-
     source = ColumnDataSource(data=df_ville)
-
     c= p.circle(x='Longitude', y='Latitude', size=8, fill_color="red", fill_alpha=0.8,source=source)
     #faire apparaitre le nom de la ville lorsque que le curseur passe au dessus d'un point
     tooltips = "@Location"
     hover = HoverTool(tooltips = tooltips, renderers = [c])
 
     p.add_tools(hover)
+    #affichage de la carte dans streamlit
+    with st.expander("Cartographie des villes du Dataset"):
+        st.markdown("""<h0 style='text-align: center; color: black;'> En s'appuyant sur l'API de googlemap, nous obtenons les coordonnées géographiques de chaque ville du dataset afin de pouvoir les cartographier.</h0>""", unsafe_allow_html=True)
+        st.bokeh_chart(p,use_container_width=False)
+    
+    #affichage de la carte météo de l'Australie
+    with st.expander("Climats australiens selon la classification de Köppen"):
+        st.markdown("""<h0 style='text-align: center; color: black;'>Bien que majoritairement aride, l'Australie est un pays immense dont le climat varie d'une région à une autre.</h0>""", unsafe_allow_html=True)
+        image_2 = Image.open('australia_meteo_map.png')
+        st.image(image_2,caption="Climats d'Australie")
 
-    st.bokeh_chart(p,use_container_width=False)
+
+    #remplacement des modalités des variables 'RainTomorrow' et 'RainToday' par 1 ou 0
+    df2=pd.read_csv("W_Aus_Na_mean.csv",index_col=0)
+    df2['RainTomorrow']=df2['RainTomorrow'].replace({'No':0,'Yes':1})
+    df2['RainToday']=df2['RainToday'].replace({'No':0,'Yes':1})
+    # création d'une liste des variable catégorielle
+    l = []
+    for i in df2.columns:
+        if df2.dtypes[i]=='O':
+            l.append(i)
+    # encoder les variables catégorielle avec la classe LebelEncoder
+    la = LabelEncoder()
+    for i in l:
+        df2[i] = la.fit_transform(df2[i])
+    # Correlations entre variables numériques
+    data = round(df2.iloc[:,1:23].corr().abs(),2) #on ne représente pas les variables que nous avons créées (State,day,year...ni date)
+    #réalisation d'une heatmap de la matrice de corrélation
+    fig, ax = plt.subplots(figsize=(17,13))
+    sns.heatmap(data,ax=ax,annot = True, cmap = "Spectral" )
+    #affichage de la heatmap
+    with st.expander("Analyse de la corrélation linéaire des variables - Coef de Pearson"):
+        col1,col2 = st.columns(2)
+        with col1:
+            st.pyplot(fig)
+        # Tri par ordre décroissant des valeurs aboslues du coefficient de pearson
+        with col2:
+            related = data['RainTomorrow'].sort_values(ascending = False)
+            related
+        st.markdown("""<h0 style='text-align: center; color: black;'>Plusieurs variables présentent une corrélation linéaire significative avec la variable cible “RainTomorrow”,
+         telles que “Humidity3pm”,”Sunshine” ou encore les variables “Cloud3pm” et “Cloud9am”.</h0>""", unsafe_allow_html=True)
+
 
 elif selection == 'Réaliser une prédiction':
     st.markdown("<h1 style='text-align: center; color: black;'>Ok Python : do I need to take my umbrella tomorrow ?</h1>", unsafe_allow_html=True)
