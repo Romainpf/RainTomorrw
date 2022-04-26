@@ -148,6 +148,103 @@ if selection == 'Description':
         st.markdown("""<h0 style='text-align: center; color: black;'>Plusieurs variables présentent une corrélation linéaire significative avec la variable cible “RainTomorrow”,
          telles que “Humidity3pm”,”Sunshine” ou encore les variables “Cloud3pm” et “Cloud9am”.</h0>""", unsafe_allow_html=True)
 
+    with st.expander("Distribution de la variable cible"):    
+        col1,col2 = st.columns(2)
+        with col1:
+            # distribution de la variable cible
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            sns.countplot(ax = ax, x = df["RainTomorrow"])
+            plt.title('Distribution de la variable RainTomorrow')
+            st.pyplot(fig)
+        with col2:
+            # Aperçu de l'équilibre des classes
+            st.table(pd.DataFrame((df["RainTomorrow"].value_counts(normalize = True)*100).reset_index().rename(columns={'index':'RainTomorrow','RainTomorrow':'Fréquence en %'})))
+        st.markdown("""<h0 style='text-align: center; color: black;'>Il y a un déséquilibre de classe important de la variable cible RainTomorrow, qui dénombre 78% de jours   sans pluie contre 22% 
+        de jours de pluie soit quasiment un rapport de 1 pour 4. Pour éviter le surapprentissage avec notre
+        modèle de prédiction, nous allons rééquilibrer les classes par Oversampling</h0>""", unsafe_allow_html=True)
+        fig = plt.figure()
+        # Histo - distribution de la variable cible en fonction de RainToday
+        ax = fig.add_subplot(111)
+        sns.countplot(df.RainTomorrow,ax=ax,hue = df.RainToday)
+        plt.title('Distribution de la variable RainTomorrow en fonction de RainToday')
+        st.pyplot(fig)
+        st.markdown("""<h0 style='text-align: center; color: black;'>Lorsqu'il pleut le jour J (RainToday),
+         la probabilité qu'il pleuve le lendemain (RainTomorrow) est beaucoup plus importante.</h0>""", unsafe_allow_html=True)
+        
+
+        st.markdown("""<h5 style='text-align: center; color: black;'>Distribution de RainTomorrow par Etat</h5>""", unsafe_allow_html=True)
+        # Histo - distribution de la varaible cible par Etat
+        # calcul de la fréquence de la variable RainTomorrow par état
+        df_frequency = pd.DataFrame(df_mean.groupby(['State','RainTomorrow']).size())
+        df_frequency.reset_index(inplace=True)
+        df_frequency['freq']=1
+        for s in (df_frequency['State']):
+            for r,i in zip (df_frequency[df_frequency['State']==s]['RainTomorrow'],list(df_frequency[df_frequency['State']==s].index)):
+                f = df_frequency[df_frequency['State']==s][0].sum()
+                df_frequency.iloc[i,3]= df_frequency[(df_frequency['State']==s)&(df_frequency['RainTomorrow']==r)][0]/f
+        
+        f = plt.figure(figsize=(16, 9.5))
+        gs = f.add_gridspec(2, 4)
+        ax = f.add_subplot(gs[0, 0])
+        sns.barplot(x='RainTomorrow',y='freq',data=df_frequency[df_frequency['State']=="South Australia"])
+        plt.title('South Australia')
+        plt.ylim(0,0.9)
+        ax = f.add_subplot(gs[0, 1])
+        sns.barplot(x='RainTomorrow',y='freq',data=df_frequency[df_frequency['State']=="New South Wales"])
+        plt.title('New South Wales')
+        plt.ylim(0,0.9)
+        ax = f.add_subplot(gs[0, 2])
+        sns.barplot(x='RainTomorrow',y='freq',data=df_frequency[df_frequency['State']=="NorfolkIsland"])
+        plt.title('NorfolkIsland')
+        plt.ylim(0,0.9)
+        ax = f.add_subplot(gs[0, 3])
+        sns.barplot(x='RainTomorrow',y='freq',data=df_frequency[df_frequency['State']=="Northern Territory"])
+        plt.title('Northern Territory')
+        plt.ylim(0,0.9)
+        ax = f.add_subplot(gs[1, 0])
+        sns.barplot(x='RainTomorrow',y='freq',data=df_frequency[df_frequency['State']=="Queensland"])
+        plt.title('Queensland')
+        plt.ylim(0,0.9)
+        ax = f.add_subplot(gs[1, 1])
+        sns.barplot(x='RainTomorrow',y='freq',data=df_frequency[df_frequency['State']=="Tasmanie"])
+        plt.title('Tasmanie')
+        plt.ylim(0,0.9)
+        ax = f.add_subplot(gs[1, 2])
+        sns.barplot(x='RainTomorrow',y='freq',data=df_frequency[df_frequency['State']=="Victoria"])
+        plt.title('Victoria')
+        plt.ylim(0,0.9)
+        ax = f.add_subplot(gs[1, 3])
+        sns.barplot(x='RainTomorrow',y='freq',data=df_frequency[df_frequency['State']=="Western Australia"])
+        plt.title('Western Australia')
+        plt.ylim(0,0.9)
+        st.pyplot(f)
+        st.markdown("""<h0 style='text-align: center; color: black;'>La distribution de la variable cible entre les différents États d’Australie est relativement homogène.</h0>""", unsafe_allow_html=True)
+
+        st.markdown("""<h5 style='text-align: center; color: black;'>Distribution de RainTomorrow en fonction de la direction du vent et de la couverture nuageuse</h5>""", unsafe_allow_html=True)
+        #histo - distribution de la variable cible en fonction de WindGustDir,WinDir et Cloud
+        f = plt.figure(figsize=(10, 10))
+        gs = f.add_gridspec(3, 2)
+        ax = f.add_subplot(gs[0, 0])
+        sns.countplot(df.WindGustDir,ax=ax, palette = 'colorblind', hue = df.RainTomorrow)
+        plt.xticks(size = 6)
+        ax = f.add_subplot(gs[0, 1])
+        sns.countplot(df.WindDir9am,ax=ax,palette = 'colorblind', hue = df.RainTomorrow)
+        plt.xticks(size = 6)
+        ax = f.add_subplot(gs[1, 0])
+        sns.countplot(df.WindDir3pm,ax=ax,palette = 'colorblind', hue = df.RainTomorrow)
+        plt.xticks(size = 6)
+        ax = f.add_subplot(gs[1, 1])
+        sns.countplot(df.Cloud9am,ax=ax, palette = 'colorblind', hue = df.RainTomorrow)
+        plt.xticks(size = 6)
+        ax = f.add_subplot(gs[2, 0])
+        sns.countplot(df.Cloud3pm,ax=ax, palette = 'colorblind', hue = df.RainTomorrow)
+        plt.xticks(size = 6)
+        st.pyplot(f)
+        st.markdown("""<h0 style='text-align: center; color: black;'>La distribution des variables liées à la direction du vent sont relativement homogène à l’exception du vent du Nord de la variable “WindDir9am” qui semble plus fortement corrélé
+         au fait qu’il pleuve le lendemain (“RainTomorrow” = yes). En revanche les variables “Cloud3pm” et “Cloud9am” sont étroitement liées au temps qu’il fera le lendemain.</h0>""", unsafe_allow_html=True)
+
+        
 
 elif selection == 'Réaliser une prédiction':
     st.markdown("<h1 style='text-align: center; color: black;'>Ok Python : do I need to take my umbrella tomorrow ?</h1>", unsafe_allow_html=True)
