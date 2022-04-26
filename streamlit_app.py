@@ -104,8 +104,8 @@ if selection == 'Description':
     #faire apparaitre le nom de la ville lorsque que le curseur passe au dessus d'un point
     tooltips = "@Location"
     hover = HoverTool(tooltips = tooltips, renderers = [c])
-
     p.add_tools(hover)
+    st.markdown("<h1 style='text-align: center; color: black;'>Que nous racontent ces données ?</h1>", unsafe_allow_html=True)
     #affichage de la carte dans streamlit
     with st.expander("Cartographie des villes du Dataset"):
         st.markdown("""<h0 style='text-align: center; color: black;'> En s'appuyant sur l'API de googlemap, nous obtenons les coordonnées géographiques de chaque ville du dataset afin de pouvoir les cartographier.</h0>""", unsafe_allow_html=True)
@@ -369,6 +369,8 @@ if selection == 'Description':
         st.markdown("""<h0 style='text-align: center; color: black;'>Il y a de nombreuses valeurs extrêmes pour plusieurs variables, mais il est difficile de distinguer celles qui sont issues d’un évènement climatique isolé, à celles qui sont liées à des évènements climatiques cycliques tels que El Niño et La Ninã.
         Bien que ces valeurs extrêmes soient plausibles, il faudra les supprimer pour éviter de biaiser l’apprentissage de nos modèles de prédictions. Elles auraient pu être conservées, si le but avait été de prédire un phénomène météorologique rare conduisant à ce type de valeur.
         </h0>""", unsafe_allow_html=True)
+    
+    st.markdown("<h1 style='text-align: center; color: black;'>Comment avons-nous préparer les données pour notre modèle de prédiction ?</h1>", unsafe_allow_html=True)
 
 elif selection == 'Réaliser une prédiction':
     st.markdown("<h1 style='text-align: center; color: black;'>Ok Python : do I need to take my umbrella tomorrow ?</h1>", unsafe_allow_html=True)
