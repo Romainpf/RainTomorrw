@@ -43,16 +43,16 @@ if selection == 'Description':
     st.markdown("<p style='text-align: center; color: black;'> Son but est de prédire la probabilité de pluie du lendemain pour \
                 un habitant australien.</p>", unsafe_allow_html=True)
 
-    #image = Image.open('drapeau.png')
+    image = Image.open('drapeau.png')
 
     # Pour centrer l'image
-    #col1, col2, col3 = st.columns(3)
-    #with col1:
-        #st.write(' ')
-    #with col2:
-        #st.image(image, caption='Australie')
-    #with col3:
-        #st.write(' ')
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write(' ')
+    with col2:
+        st.image(image, caption='Australie')
+    with col3:
+        st.write(' ')
 
     st.write("-------------------------------------------------")
     
