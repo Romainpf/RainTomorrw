@@ -244,7 +244,22 @@ if selection == 'Description':
         st.markdown("""<h0 style='text-align: center; color: black;'>La distribution des variables liées à la direction du vent sont relativement homogène à l’exception du vent du Nord de la variable “WindDir9am” qui semble plus fortement corrélé
          au fait qu’il pleuve le lendemain (“RainTomorrow” = yes). En revanche les variables “Cloud3pm” et “Cloud9am” sont étroitement liées au temps qu’il fera le lendemain.</h0>""", unsafe_allow_html=True)
 
+    with st.expander("Analyse de la pluviométrie"): 
+        st.markdown("""<h5 style='text-align: center; color: black;'>Evolution - Moyenne annuelle du volume de pluie pluie</h5>""", unsafe_allow_html=True)
+        #Moyenne des chutes de pluie par an et par Etat
+        f = sns.relplot(df_mean.year,df_mean.Rainfall,hue = df_mean.State, ci = None,kind = 'line',height=6,aspect=2)
+        plt.ylabel('rainfall en mm')
+        plt.title('Chutes de pluie par Etat')
+        st.pyplot(f)
         
+
+        st.markdown("""<h5 style='text-align: center; color: black;'>Saisonnalité - Moyenne mensuelle du volume de pluie</h5>""", unsafe_allow_html=True)
+        #pluie en fonction des mois puis de l'année
+        g=sns.relplot(df_mean.year_month,df_mean.Rainfall,col = df_mean.State,col_wrap=2, ci = None,kind = 'line',height=2,aspect=4)
+        g.set_xlabels('de 2007 à 2017')
+        plt.ylabel('rainfall en mm')
+        plt.xticks("")
+        st.pyplot(g)
 
 elif selection == 'Réaliser une prédiction':
     st.markdown("<h1 style='text-align: center; color: black;'>Ok Python : do I need to take my umbrella tomorrow ?</h1>", unsafe_allow_html=True)
