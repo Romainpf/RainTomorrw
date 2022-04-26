@@ -384,7 +384,7 @@ if selection == 'Description':
 * La normalisation des données,
 * Le rééquilibrage des classes.</h0>''', unsafe_allow_html=True)
 
-    with st.expander("Suppressions des labels sans étiquettes"):
+    with st.expander("Suppressions des labels sans étiquettes et des variables dont la proportion de valeurs NaN est > 40% "):
             st.markdown("""<h0 style='text-align: center; color: black;'>
             Dans un premier temps nous  supprimons les lignes dont les labels ne sont pas étiquetés.  
             Nous supprimons également les variables dont plus de 40% des valeurs sont manquantes. Les variables suivantes sont concernées: 'Evaporation','Sunshine','Cloud3pm'.</h0>""", unsafe_allow_html=True)
@@ -396,7 +396,7 @@ if selection == 'Description':
 
 
     with st.expander("Identification et suppression des outliers"):
-         st.markdown("""<h0 style='text-align: center; color: black;'>Préalablement au traitement des valeurs manquantes, il faut supprimer les outliers qui peuvent avoir un impact sur les valeurs qui seront imputées.  
+        st.markdown("""<h0 style='text-align: center; color: black;'>Préalablement au traitement des valeurs manquantes, il faut supprimer les outliers qui peuvent avoir un impact sur les valeurs qui seront imputées.  
         Pour l’identification des outliers nous avons utilisé la méthode Inter Quartile Range (IQR) qui se calcul de la manière suivante:  
         IQR = Q3 - Q1  
         où :  
@@ -407,7 +407,21 @@ if selection == 'Description':
         inférieur = Q1 – IQR  
         L’identification des outliers se fait pour chaque variable continue, mais en fonction de la variable ‘State’,
          car la zone géographique joue un rôle important sur les valeurs des variables.</h0>""", unsafe_allow_html=True)
- 
+
+        code = '''#avant d'appliquer la moyenne nous supprimons les valeurs extrêmes car elles ont auront une incidence sur les valeurs imputées
+                state = list(df.State.value_counts().index)
+                variables = ['MinTemp','MaxTemp','WindGustSpeed','WindSpeed9am','WindSpeed3pm','Humidity9am','Humidity3pm','Pressure9am','Pressure3pm','Temp9am','Temp3pm','Cloud9am']
+                df2=df_mean
+                for s in state:
+                    for var in variables:
+                        Q1 = np.percentile(df2[df2['State']==s][var], 25,interpolation = 'midpoint')
+                        Q3 = np.percentile(df2[df2['State']==s][var], 75,interpolation = 'midpoint')
+                        IQR = Q3 - Q1
+                        up = np.where(df2[df2['State']==s][var] >= (Q3+IQR))
+                        low = np.where(df2[df2['State']==s][var] <= (Q1-IQR))
+                        df_mean.drop(up[0], inplace = True,errors='ignore')
+                        df_mean.drop(low[0], inplace = True,errors='ignore')'''
+        st.code(code,language='python')
 
     with st.expander("Imputation des valeurs manquantes"):
          st.markdown("""<h0 style='text-align: center; color: black;'>Le traitement des valeurs manquantes a fait l’objet de 2 stratégies :  
@@ -417,29 +431,45 @@ Chacune de ces méthodes de traitement fait l’objet d’une sauvegarde sous fo
 
 
     with st.expander("Numérisation des variables"):
-         st.markdown("""<h0 style='text-align: center; color: black;'>Afin de permettre la prise en compte des variables catégorielles dans l'entraînement de certains modèles (les SVM en particulier, la régression logistique
+
+        st.markdown("""<h0 style='text-align: center; color: black;'>Afin de permettre la prise en compte des variables catégorielles dans l'entraînement de certains modèles (les SVM en particulier, la régression logistique
         ou encore l’algorithme des k plus proches voisins), il est nécessaire de transformer les modalités de celles-ci en valeurs numériques.  
         Pour cela, plusieurs possibilités existent en préprocessing des données :   
-
         * La méthode « get_dummies », qui permet de créer autant de colonnes que de modalités pour une seule variable, en y associant la valeur de 1 lorsque
-         la modalité est présente, et 0 si non. Cette méthode n’a pas été retenue : en effet, on constate une augmentation significative des variables (de 27 à environ 120)  
-        * La méthode  « LabelEncoder », qui permet d’assigner à chaque modalité d’une variable un entier compris entre 0 et le nombre de modalités de la variable
-        moins 1. C’est cette méthode qui est retenue ici : elle a le mérite de ne pas conduire à une augmentation du nombre de variables.  
+            la modalité est présente, et 0 si non. Cette méthode n’a pas été retenue : en effet, on constate une augmentation significative des variables (de 27 à environ 120)  
+        * La méthode  « LabelEncoder », qui permet d’assigner à chaque modalité d’une variable un entier compris entre 0 et le nombre de modalités de la variable moins 1. C’est cette méthode qui est retenue ici : elle a le mérite de ne pas conduire à une augmentation du nombre de variables.  
         A noter que la variable cible « RainTomorrow » est également encodée : la modalité « No » est remplacée par la valeur 0, et la modalité « Yes » par la valeur 1.</h0>""", unsafe_allow_html=True)
-
+        
+        code='''
+            # création d'une liste des variables catégorielles
+            l = []
+            for i in features_mean.columns:
+                if features_mean.dtypes[i]=='O':
+                    l.append(i)
+            # encoder les variables catégorielles avec la classe LebelEncoder
+            la = LabelEncoder()
+            for i in l:
+                features_mean[i] = la.fit_transform(features_mean[i])'''
+        st.code(code,language='python')
 
 
     with st.expander("Normalisation des données"):
-         st.markdown("""<h0 style='text-align: center; color: black;'>Les variables à disposition présentent des plages de variation qui peuvent s’avérer assez éloignées. Comme le montre le graphique en boîtes à moustaches suivant, les variables de pression « Pressure9am » et « Pressure3pm » ont des plages de variations autour de 1000, tandis que pour le reste des variables, on est plutôt en moyenne autour de la dizaine, ou la centaine.  
+        st.markdown("""<h0 style='text-align: center; color: black;'>Les variables à disposition présentent des plages de variation qui peuvent s’avérer assez éloignées. Comme le montre le graphique en boîtes à moustaches suivant, les variables de pression « Pressure9am » et « Pressure3pm » ont des plages de variations autour de 1000, tandis que pour le reste des variables, on est plutôt en moyenne autour de la dizaine, ou la centaine.  
         Un extrait de la méthode « describe » de Pandas, appliquée à notre DataFrame, permet de visualiser ces plages de variations :  </h0>""", unsafe_allow_html=True)
-         st.markdown("""<h0 style='text-align: center; color: black;'>Afin de ne pas avoir de variable qui écrase les autres et qu’elle prenne un poids trop important dans la décision d’un modèle du fait de sa valeur (notamment en régression), on procède à une normalisation des données. On utilise pour cela la méthode « StandardScaler », qui consiste à soustraire la moyenne et à diviser par l’écart type l’ensemble des valeurs de la variable.   
+        st.dataframe(pd.DataFrame(df.describe()))
+        st.markdown("""<h0 style='text-align: center; color: black;'>Afin de ne pas avoir de variable qui écrase les autres et qu’elle prenne un poids trop important dans la décision d’un modèle du fait de sa valeur (notamment en régression), on procède à une normalisation des données. On utilise pour cela la méthode « StandardScaler », qui consiste à soustraire la moyenne et à diviser par l’écart type l’ensemble des valeurs de la variable.   
         À l'issue de ce traitement, l’ensemble des variables explicatives de notre dataset sont de moyenne nulle et de variance 1.</h0>""", unsafe_allow_html=True)
-
+        code='''
+        # Centrer et réduire les variables numériques
+        scaler = StandardScaler()
+        X_train_m = scaler.fit_transform(X_train_m)
+        X_test_m = scaler.transform(X_test_m)'''
+        st.code(code,language='python')
 
 
 
     with st.expander("Rééquilibrage des classes"):
-         st.markdown("""<h0 style='text-align: center; color: black;'>Comme vu précédemment, le nombre de données correspondant à la classe « Yes » de la variable cible
+        st.markdown("""<h0 style='text-align: center; color: black;'>Comme vu précédemment, le nombre de données correspondant à la classe « Yes » de la variable cible
           « RainTomorrow » est nettement inférieur à la classe « No ». Si ce déséquilibre semble naturel et peut s’expliquer d’un point de vue météorologique (globalement sur une année, le nombre de jours sans pluie est souvent supérieur au nombre de jours avec pluie), il est en revanche problématique dans le cadre de l'entraînement des modèles de machine learning : un modèle pourra avoir un score en apparence élevé rien qu’en réalisant les bonnes prédictions sur la classe majoritaire.  
         Le rééquilibrage des classes est réalisé de plusieurs façons :  
         * Utilisation du paramètre « class_weight » associé aux modèles. L’intérêt est que cela ne nécessite pas d’action supplémentaire. En revanche cette option n’est pas
@@ -449,7 +479,11 @@ Chacune de ces méthodes de traitement fait l’objet d’une sauvegarde sous fo
         Typiquement, les algorithmes de Régression logistique, les SVM et le RandomForest embarquent le paramètre « class_weight », mais ce n’est pas le cas de l’algorithme
         de classification par les k plus proches voisins.
         </h0>""", unsafe_allow_html=True)
-
+        code = '''
+        # oversampling
+        bal = SMOTE()
+        X_train_msm, y_train_msm = bal.fit_resample(X_train_m, y_train_m)'''
+        st.code(code,language='python')
 
 
 
