@@ -27,6 +27,7 @@ from bokeh.plotting import figure, output_notebook, show
 from bokeh.models import ColumnDataSource, GMapOptions, HoverTool
 from bokeh.plotting import gmap
 from joblib import dump, load
+from keras.models import load_model 
 import xgboost as xgb
 
 df_mean = pd.read_csv('W_Aus_Na_mean.csv', index_col = 0)
@@ -509,7 +510,8 @@ elif selection == 'Réaliser une prédiction':
     clf_rf = load('classifieur_rf_mean.joblib')
     gbcl = load('classifieur_gbcl_mean.joblib')
     xgb = load('classifieur_xgb_mean.joblib')
-    """model = load('classifieur_rnd_mean.joblib')"""
+    model = load_model("classifieur_rnd_mean.h5") 
+
     ##########################
     #importation du fichier dont la moyenne a été imputée aux valeur Na
 
