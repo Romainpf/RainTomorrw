@@ -245,7 +245,6 @@ if selection == 'Description':
          au fait qu’il pleuve le lendemain (“RainTomorrow” = yes). En revanche les variables “Cloud3pm” et “Cloud9am” sont étroitement liées au temps qu’il fera le lendemain.</h0>""", unsafe_allow_html=True)
 
     with st.expander("Analyse de la pluviométrie"): 
-        st.markdown("""<h5 style='text-align: center; color: black;'>Evolution - Moyenne annuelle du volume de pluie pluie</h5>""", unsafe_allow_html=True)
         #Moyenne des chutes de pluie par an et par Etat
         f = sns.relplot(df_mean.year,df_mean.Rainfall,hue = df_mean.State, ci = None,kind = 'line',height=6,aspect=2)
         plt.ylabel('rainfall en mm')
@@ -260,6 +259,116 @@ if selection == 'Description':
         plt.ylabel('rainfall en mm')
         plt.xticks("")
         st.pyplot(g)
+        st.markdown("""<h0 style='text-align: center; color: black;'>L’évolution de la pluviométrie semble globalement constante avec quelques variations ponctuelles, 
+        dont l’explication peut se trouver dans les phénomènes météorologiques auxquels est confrontée l’Australie tels que La Niña et El Niño.  
+        Il y a notamment eu un épisode  La Niña particulièrement virulent au dernier trimestre 2010, qui s’est caractérisé par d’importantes chutes de pluie dans l’Est de l’Australie
+         et des sécheresses dans l’Ouest. Ce phénomène est parfaitement représenté ici avec une moyenne de pluie particulièrement élevée pour le Queensland située à l’Est 
+         de l’Australie et inversement une moyenne particulièrement faible pour le Western Australia.</h0>""", unsafe_allow_html=True)
+
+    with st.expander("Identification des valeurs extrêmes"):
+        st.markdown("""<h5 style='text-align: center; color: black;'>Saisonnalité - Moyenne mensuelle du volume de pluie</h5>""", unsafe_allow_html=True)
+        #Création de nouvelles colonnes contenant les mois, jours, années et année + mois car ça nous sera util pour l'exploration
+        #Définition des fonctions à appliquer à la colonne 'Date'
+        def get_day(date):
+            splits = date.split('-')    
+            day = splits[2]
+            return day
+
+        def get_month(date):
+            return date.split('-')[1]
+
+        def get_year(date):
+            return date.split('-')[0]   
+        # Application des fonctions
+        days = df['Date'].apply(get_day)
+        months = df['Date'].apply(get_month)
+        years = df['Date'].apply(get_year)
+        # Création des nouvelles colonnes
+        df['day'] = days
+        df['month'] = months
+        df['year'] = years
+        df['year_month']= years+"-"+months
+        # changement de type de donnée des colonnes month, day, et year
+        df = df.astype({'year':'int64','month':'int64','day':'int64'})
+        #importation du fichier CSV contenant les variables qui nous intéressent
+        states = pd.read_csv('australian_states.csv',';',index_col=0)
+        #fusion des deux DataFrames
+        df = pd.merge(df,states)
+        #on fait pareil avec le fichier csv que nous avons crée contenant les coordonées géo des villes
+        lat_long = pd.read_csv("geocoordonnees.csv",index_col=0)
+        df = pd.merge(df,lat_long)
+
+        fig = plt.figure(figsize=(20, 17))
+        gs = fig.add_gridspec(2, 2)
+
+        ax = fig.add_subplot(gs[0, 0])
+        sns.boxplot(y='MaxTemp',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[0, 1])
+        sns.boxplot(y='MinTemp',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[1, 0])
+        sns.boxplot(y='Temp9am',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[1, 1])
+        sns.boxplot(y='Temp3pm',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        st.pyplot(fig)
+
+        fig = plt.figure(figsize=(20, 25))
+        gs = fig.add_gridspec(4, 3)
+        ax = fig.add_subplot(gs[0, 0])
+        sns.boxplot(y='Humidity3pm',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[0, 1])
+        sns.boxplot(y='Cloud9am',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[0, 2])
+        sns.boxplot(y='Cloud3pm',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[1, 0])
+        sns.boxplot(y='Rainfall',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20);
+        ax = fig.add_subplot(gs[1, 1])
+        sns.boxplot(y='Evaporation',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[1, 2])
+        sns.boxplot(y='Humidity9am',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[2, 0])
+        sns.boxplot(y='Pressure9am',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[2, 1])
+        sns.boxplot(y='Pressure3pm',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[3, 0])
+        sns.boxplot(y='WindGustSpeed',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[3, 1])
+        sns.boxplot(y='WindSpeed9am',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        ax = fig.add_subplot(gs[3, 2])
+        sns.boxplot(y='WindSpeed3pm',x='State',data=df,ax=ax)
+        sns.despine(top = True, bottom = True, left = False, right = False)
+        plt.xticks(rotation=20)
+        st.pyplot(fig)
+        st.markdown("""<h0 style='text-align: center; color: black;'>Il y a de nombreuses valeurs extrêmes pour plusieurs variables, mais il est difficile de distinguer celles qui sont issues d’un évènement climatique isolé, à celles qui sont liées à des évènements climatiques cycliques tels que El Niño et La Ninã.
+        Bien que ces valeurs extrêmes soient plausibles, il faudra les supprimer pour éviter de biaiser l’apprentissage de nos modèles de prédictions. Elles auraient pu être conservées, si le but avait été de prédire un phénomène météorologique rare conduisant à ce type de valeur.
+        </h0>""", unsafe_allow_html=True)
 
 elif selection == 'Réaliser une prédiction':
     st.markdown("<h1 style='text-align: center; color: black;'>Ok Python : do I need to take my umbrella tomorrow ?</h1>", unsafe_allow_html=True)
