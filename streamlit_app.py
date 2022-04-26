@@ -26,6 +26,7 @@ from bokeh.io import output_file, show,output_notebook
 from bokeh.plotting import figure, output_notebook, show
 from bokeh.models import ColumnDataSource, GMapOptions, HoverTool
 from bokeh.plotting import gmap
+from joblib import dump, load
 import xgboost as xgb
 
 df_mean = pd.read_csv('W_Aus_Na_mean.csv', index_col = 0)
@@ -386,6 +387,12 @@ if selection == 'Description':
             st.markdown("""<h0 style='text-align: center; color: black;'>
         Dans un premier temps nous  supprimons les lignes dont les labels ne sont pas étiquetés.  
         Nous supprimons également les variables dont plus de 40% des valeurs sont manquantes. Les variables suivantes sont concernées: 'Evaporation','Sunshine','Cloud3pm'.</h0>""", unsafe_allow_html=True)
+        code = '''# On défini un nouveau Dataframe en ne gardant dans un premier temps que les données étiquetées
+        df_mean = df[(df["RainTomorrow"] == "No") | (df["RainTomorrow"] == "Yes") ]
+        #suppression des variables pour lesquelles un trop grand nombre valeurs est manquant
+        df_mean.drop(['Evaporation','Sunshine','Cloud3pm'],axis=1,inplace=True)'''
+        st.code(code,language='python')
+
 
     with st.expander("Identification et suppression des outliers"):
          st.markdown("""<h0 style='text-align: center; color: black;'>Préalablement au traitement des valeurs manquantes, il faut supprimer les outliers qui peuvent avoir un impact sur les valeurs qui seront imputées.  
@@ -500,9 +507,16 @@ elif selection == 'Réaliser une prédiction':
     
     ##########################
     # Recharger les modèles (avec entrainement pour le moment, et uniquement avec les NaN mean)
+    lr = load('classifieur_lr_mean.joblib')
+    clf_knn = load('classifieur_knn_mean.joblib')
+    clf_svc = load('classifieur_svc_mean.joblib')
+    clf_rf = load('classifieur_rf_mean.joblib')
+    gbcl = load('classifieur_gbcl_mean.joblib')
+    xgb = load('classifieur_xgb_mean.joblib')
+    model = load('classifieur_rnd_mean.joblib')
     ##########################
     #importation du fichier dont la moyenne a été imputée aux valeur Na
-    df_mean = pd.read_csv('W_Aus_Na_mean.csv', index_col = 0)
+    """df_mean = pd.read_csv('W_Aus_Na_mean.csv', index_col = 0)
 
     #remplacement des modalités des variables 'RainTomorrow' et 'RainToday' par 1 ou 0
     df_mean['RainTomorrow']=df_mean['RainTomorrow'].replace({'No':0,'Yes':1})
@@ -524,18 +538,19 @@ elif selection == 'Réaliser une prédiction':
     la = LabelEncoder()
     for i in l:
         features_mean[i] = la.fit_transform(features_mean[i])
-
-    # Centrer et réduire les variables numériques
-    scaler = StandardScaler()
-    features_mean = scaler.fit_transform(features_mean)
                 
     # création d'un jeu d'entrainement et de test sans traiter le déséquilibre des classes
     X_train_m,X_test_m,y_train_m,y_test_m = train_test_split(features_mean,target_mean,test_size=0.2,random_state=789)
 
+    # Centrer et réduire les variables numériques
+    scaler = StandardScaler()
+    X_train_m = scaler.fit_transform(X_train_m)
+    X_test_m = scaler.transform(X_test_m)
+    
     bal = SMOTE()
-    X_train_msm, y_train_msm = bal.fit_resample(X_train_m, y_train_m)
+    X_train_msm, y_train_msm = bal.fit_resample(X_train_m, y_train_m)"""
 
-    # Entrainement LR
+    """# Entrainement LR
     lr = LogisticRegression(class_weight = 'balanced',C=1 )
     lr.fit(X_train_m, y_train_m)
     
@@ -577,9 +592,9 @@ elif selection == 'Réaliser une prédiction':
 
 
     xgb = xgb.XGBClassifier(params=param,random_state=42)
-    xgb.fit(X_train_msm,y_train_msm)
+    xgb.fit(X_train_msm,y_train_msm)"""
     
-    # Entrainement RN
+    '''# Entrainement RN
     inputs = Input(shape = 22,name='Input')
     dense1 = Dense(units=20,activation='tanh',name='Dense_1')
     dense2 = Dense(units=10,activation='tanh',name='Dense_2')
@@ -596,7 +611,7 @@ elif selection == 'Réaliser une prédiction':
     model.compile(loss = "sparse_categorical_crossentropy",
               optimizer = "adam",
               metrics = ["accuracy"])
-    model.fit(X_train_msm,y_train_msm,epochs=15,batch_size=15,validation_split=0.1)
+    model.fit(X_train_msm,y_train_msm,epochs=15,batch_size=15,validation_split=0.1)'''
     
     ################################
     
