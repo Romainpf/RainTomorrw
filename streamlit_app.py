@@ -385,13 +385,13 @@ if selection == 'Description':
 
     with st.expander("Suppressions des labels sans étiquettes"):
             st.markdown("""<h0 style='text-align: center; color: black;'>
-        Dans un premier temps nous  supprimons les lignes dont les labels ne sont pas étiquetés.  
-        Nous supprimons également les variables dont plus de 40% des valeurs sont manquantes. Les variables suivantes sont concernées: 'Evaporation','Sunshine','Cloud3pm'.</h0>""", unsafe_allow_html=True)
-        code = '''# On défini un nouveau Dataframe en ne gardant dans un premier temps que les données étiquetées
-        df_mean = df[(df["RainTomorrow"] == "No") | (df["RainTomorrow"] == "Yes") ]
-        #suppression des variables pour lesquelles un trop grand nombre valeurs est manquant
-        df_mean.drop(['Evaporation','Sunshine','Cloud3pm'],axis=1,inplace=True)'''
-        st.code(code,language='python')
+            Dans un premier temps nous  supprimons les lignes dont les labels ne sont pas étiquetés.  
+            Nous supprimons également les variables dont plus de 40% des valeurs sont manquantes. Les variables suivantes sont concernées: 'Evaporation','Sunshine','Cloud3pm'.</h0>""", unsafe_allow_html=True)
+            code = '''# On défini un nouveau Dataframe en ne gardant dans un premier temps que les données étiquetées
+            df_mean = df[(df["RainTomorrow"] == "No") | (df["RainTomorrow"] == "Yes") ]
+            #suppression des variables pour lesquelles un trop grand nombre valeurs est manquant
+            df_mean.drop(['Evaporation','Sunshine','Cloud3pm'],axis=1,inplace=True)'''
+            st.code(code,language='python')
 
 
     with st.expander("Identification et suppression des outliers"):
@@ -410,13 +410,9 @@ if selection == 'Description':
 
     with st.expander("Imputation des valeurs manquantes"):
          st.markdown("""<h0 style='text-align: center; color: black;'>Le traitement des valeurs manquantes a fait l’objet de 2 stratégies :  
-
-        Imputation avec la méthode KNNImputer de Sklearn : la valeur manquante d’une variable pour une observation donnée est remplacée par la moyenne de ses
-         k plus proches voisins trouvés par l’algorithme k-Nearest Neighbors, les plus proches voisins étant les observations qui sont proches vis-à-vis des
-          valeurs des autres variables non manquantes. Le nombre de voisins choisis est k = 2.
-        Imputation par la moyenne pour les variables numériques et par la modalité la plus fréquente pour les variables catégorielles.  
-        Chacune de ces méthodes de traitement fait l’objet d’une sauvegarde sous forme de fichier « csv », l’idée étant de pouvoir comparer l’impact de ces 2
-         stratégies sur les performances des modèles de machine learning testés plus tard en chargeant l’un ou l’autre des fichiers.</h0>""", unsafe_allow_html=True)
+* Imputation avec la méthode KNNImputer de Sklearn : la valeur manquante d’une variable pour une observation donnée est remplacée par la moyenne de ses k plus proches voisins trouvés par l’algorithme k-Nearest Neighbors, les plus proches voisins étant les observations qui sont proches vis-à-vis des valeurs des autres variables non manquantes. Le nombre de voisins choisis est k = 2.  
+* Imputation par la moyenne pour les variables numériques et par la modalité la plus fréquente pour les variables catégorielles.  
+Chacune de ces méthodes de traitement fait l’objet d’une sauvegarde sous forme de fichier « csv », l’idée étant de pouvoir comparer l’impact de ces 2 stratégies sur les performances des modèles de machine learning testés plus tard en chargeant l’un ou l’autre des fichiers.</h0>""", unsafe_allow_html=True)
 
 
     with st.expander("Numérisation des variables"):
@@ -513,105 +509,10 @@ elif selection == 'Réaliser une prédiction':
     clf_rf = load('classifieur_rf_mean.joblib')
     gbcl = load('classifieur_gbcl_mean.joblib')
     xgb = load('classifieur_xgb_mean.joblib')
-    model = load('classifieur_rnd_mean.joblib')
+    """model = load('classifieur_rnd_mean.joblib')"""
     ##########################
     #importation du fichier dont la moyenne a été imputée aux valeur Na
-    """df_mean = pd.read_csv('W_Aus_Na_mean.csv', index_col = 0)
 
-    #remplacement des modalités des variables 'RainTomorrow' et 'RainToday' par 1 ou 0
-    df_mean['RainTomorrow']=df_mean['RainTomorrow'].replace({'No':0,'Yes':1})
-    df_mean['RainToday']=df_mean['RainToday'].replace({'No':0,'Yes':1})
-
-    #suppression de la colonne 'Date' qui n'a pas d'incidence fondamentale sur le résultat final
-    df_mean.drop(['Location','year','day','State'],axis=1,inplace=True)
-
-    # création des DataFrame features et target
-    features_mean = df_mean.drop('RainTomorrow',axis=1)
-    target_mean = df_mean['RainTomorrow']
-
-    # création d'une liste des variable catégorielle
-    l = []
-    for i in features_mean.columns:
-        if features_mean.dtypes[i]=='O':
-            l.append(i)
-    # encoder les variables catégorielle avec la classe LebelEncoder
-    la = LabelEncoder()
-    for i in l:
-        features_mean[i] = la.fit_transform(features_mean[i])
-                
-    # création d'un jeu d'entrainement et de test sans traiter le déséquilibre des classes
-    X_train_m,X_test_m,y_train_m,y_test_m = train_test_split(features_mean,target_mean,test_size=0.2,random_state=789)
-
-    # Centrer et réduire les variables numériques
-    scaler = StandardScaler()
-    X_train_m = scaler.fit_transform(X_train_m)
-    X_test_m = scaler.transform(X_test_m)
-    
-    bal = SMOTE()
-    X_train_msm, y_train_msm = bal.fit_resample(X_train_m, y_train_m)"""
-
-    """# Entrainement LR
-    lr = LogisticRegression(class_weight = 'balanced',C=1 )
-    lr.fit(X_train_m, y_train_m)
-    
-    # Entrainement KNN
-    from sklearn import neighbors
-    clf_knn = neighbors.KNeighborsClassifier(n_neighbors = 7, metric='minkowski' )
-    clf_knn.fit(X_train_msm, y_train_msm)
-    
-    # Entrainement SVM
-    clf_svc = SVC(class_weight='balanced')
-    clf_svc.fit(X_train_m, y_train_m)
-
-    # Entrainement RF
-    clf_rf_m = RandomForestClassifier (max_features = 'sqrt',min_samples_leaf = 1,class_weight="balanced", random_state=789)
-    clf_rf_m.fit(X_train_msm,y_train_msm)
-    
-    # Entrainement Boosting
-    gbcl = GradientBoostingClassifier(random_state=789, loss ='deviance',subsample = 0.5, max_depth=15,n_estimators=1000,learning_rate=0.1)
-    gbcl.fit(X_train_msm,y_train_msm)
-    
-    # Entrainement XGboost
-    param = {}
-    param['booster'] = 'gbtree'
-    param['objective'] = 'binary:logistic'
-    param['num_boost_round']=250
-    param['learning_rate ']=0.1
-    param["eval_metric"] = "error"
-    param['eta'] = 0.3
-    param['gamma'] = 1
-    param['silent']=1
-    param['max_depth'] = 23
-    param['min_child_weight']=4
-    param['max_delta_step'] = 0
-    param['subsample']= 0.8
-    param['colsample_bytree']=1
-    param['silent'] = 1
-    param['seed'] = 0
-    param['base_score'] = 0.5
-
-
-    xgb = xgb.XGBClassifier(params=param,random_state=42)
-    xgb.fit(X_train_msm,y_train_msm)"""
-    
-    '''# Entrainement RN
-    inputs = Input(shape = 22,name='Input')
-    dense1 = Dense(units=20,activation='tanh',name='Dense_1')
-    dense2 = Dense(units=10,activation='tanh',name='Dense_2')
-    dense3 = Dense(units = 5, activation = "tanh", name = "Dense_3")
-    dense4 = Dense(units = 3, activation = "softmax", name = "Dense_4")
-
-    x = dense1(inputs)
-    x = dense2(x)
-    x = dense3(x)
-    outputs = dense4(x)
-
-    model = Model(inputs = inputs, outputs = outputs)
-    
-    model.compile(loss = "sparse_categorical_crossentropy",
-              optimizer = "adam",
-              metrics = ["accuracy"])
-    model.fit(X_train_msm,y_train_msm,epochs=15,batch_size=15,validation_split=0.1)'''
     
     ################################
     
@@ -651,15 +552,14 @@ elif selection == 'Réaliser une prédiction':
     X_new = X_new.astype({'year':'int64','month':'int64','day':'int64'})
 
     X_new['RainToday']= X_new['RainToday'].replace({'No':0,'Yes':1})
-    X_new.drop(['Location','year','day'],axis=1,inplace=True)
+    X_new.drop(['Location','year','day','State'],axis=1,inplace=True)
                          
     # encoder les variables de X_new
     for i in l:
         X_new[i] = la.transform(X_new[i])
     # Centrer et réduire les variables numériques de X_new
     X_new = scaler.transform(X_new)
-                
-     
+
     # Prediction de la probabilité de pluie pour X_new
     if modele == "Regression logistique":
         y_new_prob = lr.predict_proba(X_new)
