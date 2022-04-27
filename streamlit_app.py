@@ -504,7 +504,7 @@ elif selection == 'Réaliser une prédiction':
     
     df=pd.read_csv("W_Aus_Na_mean.csv",index_col=0)
     
-    Date = st.date_input('Date', datetime.date(2022, 4, 27))
+    Date = str(st.date_input('Date', datetime.date(2022, 4, 27)))
     Location = st.selectbox('Localisation',  tuple(df["Location"].sort_values().unique())   )
     WindDir9am = st.selectbox('Direction moyenne du vent entre 8h50 et 9h', tuple(df["WindDir9am"].sort_values().unique())    )
     WindDir3pm = st.selectbox('Direction moyenne du vent entre 14h50 et 15h', tuple(df["WindDir3pm"].sort_values().unique())   )
@@ -576,13 +576,30 @@ elif selection == 'Réaliser une prédiction':
 
         ##########################
         # création d'une series pandas correspondant à l'observation entrée par l'utilisateur
-        X_new = pd.DataFrame(
-                    data = np.array([Date, Location, MinTemp, MaxTemp, Rainfall, WindGustDir, WindGustSpeed, WindDir9am, WindDir3pm, WindSpeed9am, 
-                                    WindSpeed3pm, Humidity9am, Humidity3pm, Pressure9am, Pressure3pm, Cloud9am, Temp9am, Temp3pm, RainToday]),
+        X_new = pd.DataFrame(data = np.zeros(shape=(1,19)),
                     columns = ['Date', 'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'WindGustDir', 'WindGustSpeed', 
                                'WindDir9am', 'WindDir3pm', 'WindSpeed9am', 'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 
-                               'Pressure3pm', 'Cloud9am', 'Temp9am', 'Temp3pm', 'RainToday']
-                            )
+                               'Pressure3pm', 'Cloud9am', 'Temp9am', 'Temp3pm', 'RainToday'])
+
+        X_new.Date = Date
+        X_new.Location =Location
+        X_new.WindDir9am = WindDir9am
+        X_new.WindDir3pm = WindDir3pm
+        X_new.WindGustDir = WindGustDir
+        X_new.WindGustSpeed = WindGustSpeed
+        X_new.MinTemp = MinTemp
+        X_new.MaxTemp = MaxTemp
+        X_new.Rainfall = Rainfall
+        X_new.WindSpeed9am = WindSpeed9am
+        X_new.WindSpeed3pm = WindSpeed3pm
+        X_new.Humidity9am = Humidity9am
+        X_new.Humidity3pm = Humidity3pm
+        X_new.Pressure9am = Pressure9am
+        X_new.Pressure3pm = Pressure3pm
+        X_new.Cloud9am = Cloud9am
+        X_new.Temp9am = Temp9am
+        X_new.Temp3pm = Temp3pm
+        X_new.RainToday = RainToday
 
         # post traitement des données
         #def get_day(date):
