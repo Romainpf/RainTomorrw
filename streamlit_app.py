@@ -616,26 +616,27 @@ elif selection == 'Réaliser une prédiction':
         def get_month(date):
             return date.split('-')[1]
 
-        #def get_year(date):
-            #return date.split('-')[0]   
+        def get_year(date):
+            return date.split('-')[0]   
 
         # Application des fonctions
         # day = X_new['Date'].apply(get_day)
         month = X_new['Date'].apply(get_month)
-        # year = X_new['Date'].apply(get_year)
+        year = X_new['Date'].apply(get_year)
 
         #X_new['day'] = days
-        X_new['month'] = months
-        #X_new['year'] = years
-        X_new['year_month']= years+"-"+months
+        X_new['month'] = month
+        X_new['year'] = year
+        X_new['year_month']= year+"-"+month
         # changement de type de donnée des colonnes month, day, et year
         X_new = X_new.astype({'month':'int64'})
 
         X_new['RainToday']= X_new['RainToday'].replace({'No':0,'Yes':1})
-        #X_new.drop(['Location','year','day'],axis=1,inplace=True)
+        X_new.drop('year',axis=1,inplace=True)
 
         # encoder les variables de X_new
         la = load('label_encoder.joblib')
+        l=['Date', 'WindGustDir', 'WindDir9am', 'WindDir3pm', 'year_month']
         for i in l:
             X_new[i] = la.transform(X_new[i])
         # Centrer et réduire les variables numériques de X_new
