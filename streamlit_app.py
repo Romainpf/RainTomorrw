@@ -505,7 +505,7 @@ elif selection == 'Réaliser une prédiction':
     df=pd.read_csv("W_Aus_Na_mean.csv",index_col=0)
     
     Date = st.date_input('Date', datetime.date(2022, 4, 27))
-    Date = Date.strftime("%Y-%m-%d")
+    Date = Date.strftime("2016-%m-%d")
     Location = st.selectbox('Localisation',  tuple(df["Location"].sort_values().unique())   )
     WindDir9am = st.selectbox('Direction moyenne du vent entre 8h50 et 9h', tuple(df["WindDir9am"].sort_values().unique())    )
     WindDir3pm = st.selectbox('Direction moyenne du vent entre 14h50 et 15h', tuple(df["WindDir3pm"].sort_values().unique())   )
@@ -636,14 +636,17 @@ elif selection == 'Réaliser une prédiction':
         X_new.drop('year',axis=1,inplace=True)
 
         # encoder les variables de X_new
-        la = load('label_encoder.joblib')
+        #la = load('label_encoder.joblib')
+        from sklearn.preprocessing import LabelEncoder
+        la = LabelEncoder()
+
         l=['Date', 'WindGustDir', 'WindDir9am', 'WindDir3pm', 'year_month'] 
         for i in l:
-            X_new[i] = la.transform(X_new[i])
+            X_new[i] = la.fit_transform(X_new[i])
         # Centrer et réduire les variables numériques de X_new
         scaler = load('scaler.joblib')
         X_new = scaler.transform(X_new)
-        st.dataframe(X_new)
+        
         ##########################
 
         ##########################
