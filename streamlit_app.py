@@ -502,128 +502,159 @@ elif selection == 'Réaliser une prédiction':
     st.markdown("<p style='text-align: left; color: black;'> Pour nous permettre de réaliser la prédiction, \
     merci de renseigner les données météorologiques suivantes pour la journée en cours :</p>", unsafe_allow_html=True)
     
+    df=pd.read_csv("W_Aus_Na_mean.csv",index_col=0)
+    
     Date = st.date_input('Date', datetime.date(2022, 4, 27))
     Location = st.selectbox('Localisation',  tuple(df["Location"].sort_values().unique())   )
     WindDir9am = st.selectbox('Direction moyenne du vent entre 8h50 et 9h', tuple(df["WindDir9am"].sort_values().unique())    )
     WindDir3pm = st.selectbox('Direction moyenne du vent entre 14h50 et 15h', tuple(df["WindDir3pm"].sort_values().unique())   )
     WindGustDir = st.selectbox('Direction de la plus forte rafale de vent', tuple(df["WindGustDir"].sort_values().unique()) )
     WindGustSpeed = st.slider("Vitesse de la plus forte rafale de vent (en km/h)", 
-                              int(df["WindGustSpeed"].min()), int(df["WindGustSpeed"].max()), int(df["WindGustSpeed"].mean())) 
-    MinTemp = st.slider('Température minimale', -20, 100, 10) 
-    MaxTemp = st.slider('Température maximale', 0, 100, 40) 
-    Rainfall = st.slider('Précipitations (en mm)', 0, 20, 0) 
-    Evaporation = st.slider('Evaporation (en mm)', 0, 20, 0)  
-    Sunshine = st.slider("Nombre d'heures d'ensoleillement", 0, 24, 5)  
-    WindSpeed9am = st.slider("Vitesse moyenne du vent entre 8h50 et 9h (en km/h)", 0, 100, 5)  
-    WindSpeed3pm = st.slider("Vitesse moyenne du vent entre 14h50 et 15h (en km/h)", 0, 100, 5)  
-    Humidity9am = st.slider("Taux d'humidité à 9h (en %)", 0, 100, 5)
-    Humidity3pm = st.slider("Taux d'humidité à 15h (en %)", 0, 100, 5)
-    Pressure9am = st.slider("Pression atmosphérique à 9h(en hectopascals)", 500, 2000, 1000) 
-    Pressure3pm = st.slider("Pression atmosphérique à 15h(en hectopascals)", 500, 2000, 1000) 
+                              0, 250, int(df["WindGustSpeed"].mean())) 
+    MinTemp = st.slider('Température minimale', -20, 100, int(df["MinTemp"].mean())) 
+    MaxTemp = st.slider('Température maximale', 0, 100, int(df["MaxTemp"].mean())) 
+    Rainfall = st.slider('Précipitations (en mm)', 0, 100, int(df["Rainfall"].mean())) 
+    Evaporation = st.slider('Evaporation (en mm)', 0, 100, int(df["Evaporation"].mean()))  
+    Sunshine = st.slider("Nombre d'heures d'ensoleillement", 0, 24, int(df["Sunshine"].mean()))  
+    WindSpeed9am = st.slider("Vitesse moyenne du vent entre 8h50 et 9h (en km/h)", 0, 200, int(df["WindSpeed9am"].mean()))  
+    WindSpeed3pm = st.slider("Vitesse moyenne du vent entre 14h50 et 15h (en km/h)", 0, 200, int(df["WindSpeed3pm"].mean()))  
+    Humidity9am = st.slider("Taux d'humidité à 9h (en %)", 0, 100, int(df["Humidity9am"].mean()))
+    Humidity3pm = st.slider("Taux d'humidité à 15h (en %)", 0, 100, int(df["Humidity3pm"].mean()))
+    Pressure9am = st.slider("Pression atmosphérique à 9h(en hectopascals)", 500, 2000, int(df["Pressure9am"].mean())) 
+    Pressure3pm = st.slider("Pression atmosphérique à 15h(en hectopascals)", 500, 2000, int(df["Pressure3pm"].mean())) 
     Cloud9am = st.select_slider('Fraction du ciel obscurcie par les nuages à 9h',
      options=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])  
     Cloud3pm = st.select_slider('Fraction du ciel obscurcie par les nuages à 15h',
      options=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])  
-    Temp9am = st.slider("Température à 9h", -20, 80, 20) 
-    Temp3pm = st.slider("Température à 15h", -20, 80, 20) 
-    RainToday = st.radio("Est ce qu'il a plu aujourd'hui :",
-    ("Yes", "No")
-)
+    Temp9am = st.slider("Température à 9h", -20, 80, int(df["Temp9am"].mean())) 
+    Temp3pm = st.slider("Température à 15h", -20, 80, int(df["Temp3pm"].mean())) 
+    RainToday = st.radio("Est ce qu'il a plu aujourd'hui :", ("Yes", "No"))
 
     st.write("-------------------------------------------------")
     
     st.markdown("<h1 style='text-align: center; color: black;'>Prévision de pluie pour le lendemain</h1>", unsafe_allow_html=True)
     modele = st.radio("Choisir votre modèle de prédiction :",
-    ("Regression logistique", "KNN", "SVM", "RandomForest", "GradientBoostingClassifier", "XGboost", "Réseau de neurones dense"))
+    ("Regression logistique", "KNN", "SVM", "RandomForest", "XGboost", "Réseau de neurones dense"))
+    # "GradientBoostingClassifier",
     
-    ##########################
-    # Recharger les modèles (avec entrainement pour le moment, et uniquement avec les NaN mean)
-    lr = load('classifieur_lr_mean.joblib')
-    clf_knn = load('classifieur_knn_mean.joblib')
-    clf_svc = load('classifieur_svc_mean.joblib')
-    clf_rf = load('classifieur_rf_mean.joblib')
-    gbcl = load('classifieur_gbcl_mean.joblib')
-    xgb = load('classifieur_xgb_mean.joblib')
-    model = load_model("classifieur_rnd_mean.h5") 
+    clicked = st.button("Prédire")
+    
+    # Si il y a un clique
+    if clicked:
+        ##########################
+        # Recharger les modèles 
+        lr = load('classifieur_lr_mean.joblib')
+        clf_knn = load('classifieur_knn_mean.joblib')
+        clf_svc = load('classifieur_svc_mean.joblib')
+        clf_rf = load('classifieur_rf_mean.joblib')
+        #gbcl = load('classifieur_gbcl_mean.joblib')
+        xgb = load('classifieur_xgb_mean.joblib')
+        model = load_model("classifieur_rnd_mean.h5") 
+        ###########################
 
-    ##########################
-    #importation du fichier dont la moyenne a été imputée aux valeur Na
+        ##################################
+        # Recharger le scaler et l'encoder
 
-    
-    ################################
-    
-    
-  
-    # création d'une series pandas correspondant à l'observation entrée par l'utilisateur
-    X_new = pd.DataFrame(
-                data = np.array([Date, Location, MinTemp, MaxTemp, Rainfall, Evaporation, Sunshine, WindGustDir, WindGustSpeed, WindDir9am, WindDir3pm, WindSpeed9am, 
-                                WindSpeed3pm, Humidity9am, Humidity3pm, Pressure9am, Pressure3pm, Cloud9am, Cloud3pm, Temp9am, Temp3pm, RainToday]),
-                columns = ['Date', 'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine', 'WindGustDir', 'WindGustSpeed', 
-                           'WindDir9am', 'WindDir3pm', 'WindSpeed9am', 'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 
-                           'Pressure3pm', 'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm', 'RainToday']
-                        )
-    
-    # post traitement des données
-    def get_day(date):
-        splits = date.split('-')    
-        day = splits[2]
-        return day
+        #importation du fichier dont la moyenne a été imputée aux valeur Na
+        df_mean = pd.read_csv('W_Aus_Na_mean.csv', index_col = 0)
+        #remplacement des modalités des variables 'RainTomorrow' et 'RainToday' par 1 ou 0
+        df_mean['RainTomorrow']=df_mean['RainTomorrow'].replace({'No':0,'Yes':1})
+        df_mean['RainToday']=df_mean['RainToday'].replace({'No':0,'Yes':1})
+        #suppression de la colonne 'Date' qui n'a pas d'incidence fondamentale sur le résultat final
+        df_mean.drop(['Location','year','day','State'],axis=1,inplace=True)
+        # création des DataFrame features et target
+        features_mean = df_mean.drop('RainTomorrow',axis=1)
+        target_mean = df_mean['RainTomorrow']
+        # création d'une liste des variable catégorielle
+        l = []
+        for i in features_mean.columns:
+            if features_mean.dtypes[i]=='O':
+                l.append(i)
+        # encoder les variables catégorielle avec la classe LebelEncoder
+        la = LabelEncoder()
+        for i in l:
+            features_mean[i] = la.fit_transform(features_mean[i])
+        # Centrer et réduire les variables numériques
+        scaler = StandardScaler()
+        features_mean = scaler.fit_transform(features_mean)
+        ##########################
 
-    def get_month(date):
-        return date.split('-')[1]
+        ##########################
+        # création d'une series pandas correspondant à l'observation entrée par l'utilisateur
+        X_new = pd.DataFrame(
+                    data = np.array([Date, Location, MinTemp, MaxTemp, Rainfall, Evaporation, Sunshine, WindGustDir, WindGustSpeed, WindDir9am, WindDir3pm, WindSpeed9am, 
+                                    WindSpeed3pm, Humidity9am, Humidity3pm, Pressure9am, Pressure3pm, Cloud9am, Cloud3pm, Temp9am, Temp3pm, RainToday]),
+                    columns = ['Date', 'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine', 'WindGustDir', 'WindGustSpeed', 
+                               'WindDir9am', 'WindDir3pm', 'WindSpeed9am', 'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 
+                               'Pressure3pm', 'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm', 'RainToday']
+                            )
 
-    def get_year(date):
-        return date.split('-')[0]   
-    
-    # Application des fonctions
-    day = X_new['Date'].apply(get_day)
-    month = X_new['Date'].apply(get_month)
-    year = X_new['Date'].apply(get_year)
-    
-    X_new['day'] = days
-    X_new['month'] = months
-    X_new['year'] = years
-    X_new['year_month']= years+"-"+months
-    # changement de type de donnée des colonnes month, day, et year
-    X_new = X_new.astype({'year':'int64','month':'int64','day':'int64'})
+        # post traitement des données
+        def get_day(date):
+            splits = date.split('-')    
+            day = splits[2]
+            return day
 
-    X_new['RainToday']= X_new['RainToday'].replace({'No':0,'Yes':1})
-    X_new.drop(['Location','year','day','State'],axis=1,inplace=True)
-                         
-    # encoder les variables de X_new
-    for i in l:
-        X_new[i] = la.transform(X_new[i])
-    # Centrer et réduire les variables numériques de X_new
-    X_new = scaler.transform(X_new)
+        def get_month(date):
+            return date.split('-')[1]
 
-    # Prediction de la probabilité de pluie pour X_new
-    if modele == "Regression logistique":
-        y_new_prob = lr.predict_proba(X_new)
-    elif modele =="KNN":
-        y_new_prob = clf_knn.predict_proba(X_new)
-    elif modele =="SVM":
-        y_new_prob = clf_svc.predict_proba(X_new)
-    elif modele =="RandomForest":
-        y_new_prob = clf_rf_m.predict_proba(X_new)
-    elif modele =="GradientBoostingClassifier":
-        y_new_prob = gbcl.predict_proba(X_new)
-    elif modele =="XGboost":
-        y_new_prob = xgb.predict_proba(X_new)
-    elif modele =="Réseau de neurones dense":
-        y_new_prob = model.predict_proba(X_new)
-    
-    st.write('La probabilité de pluie pour demain est de :', y_new_prob*100)
-    if y_new_prob > 0.5:
-        st.write('Vous devriez penser à prendre votre parapluie demain !')
-        
-        image = Image.open('umbrella.png')
-        # Pour centrer l'image
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.write(' ')
-        with col2:
-            st.image(image, caption='Your favorite umbrella')
-        with col3:
-            st.write(' ')
-    else:
-        st.write('Il ne semble pas nécessaire de prendre votre parapluie demain !')
+        def get_year(date):
+            return date.split('-')[0]   
+
+        # Application des fonctions
+        day = X_new['Date'].apply(get_day)
+        month = X_new['Date'].apply(get_month)
+        year = X_new['Date'].apply(get_year)
+
+        X_new['day'] = days
+        X_new['month'] = months
+        X_new['year'] = years
+        X_new['year_month']= years+"-"+months
+        # changement de type de donnée des colonnes month, day, et year
+        X_new = X_new.astype({'year':'int64','month':'int64','day':'int64'})
+
+        X_new['RainToday']= X_new['RainToday'].replace({'No':0,'Yes':1})
+        X_new.drop(['Location','year','day'],axis=1,inplace=True)
+
+        # encoder les variables de X_new
+
+        for i in l:
+            X_new[i] = la.transform(X_new[i])
+        # Centrer et réduire les variables numériques de X_new
+        X_new = scaler.transform(X_new)
+        ##########################
+
+        ##########################
+        # Prediction de la probabilité de pluie pour X_new
+        if modele == "Regression logistique":
+            y_new_prob = lr.predict_proba(X_new)
+        elif modele =="KNN":
+            y_new_prob = clf_knn.predict_proba(X_new)
+        elif modele =="SVM":
+            y_new_prob = clf_svc.predict_proba(X_new)
+        elif modele =="RandomForest":
+            y_new_prob = clf_rf.predict_proba(X_new)
+        elif modele =="GradientBoostingClassifier":
+            y_new_prob = gbcl.predict_proba(X_new)
+        elif modele =="XGboost":
+            y_new_prob = xgb.predict_proba(X_new)
+        elif modele =="Réseau de neurones dense":
+            y_new_prob = model.predict_proba(X_new)
+        else:
+            st.write("Vous n'avez sélectionné aucun modèle")
+
+        st.write('La probabilité de pluie pour demain est de :', y_new_prob*100)
+        if y_new_prob > 0.5:
+            st.write('Vous devriez penser à prendre votre parapluie demain !')
+
+            image = Image.open('umbrella.png')
+            # Pour centrer l'image
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.write(' ')
+            with col2:
+                st.image(image, caption='Your favorite umbrella')
+            with col3:
+                st.write(' ')
+        else:
+            st.write('Il ne semble pas nécessaire de prendre votre parapluie demain !')
