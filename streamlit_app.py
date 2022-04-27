@@ -613,7 +613,7 @@ elif selection == 'Réaliser une prédiction':
         X_new = pd.merge(X_new,lat_long)
         #suppression de la variable Location
         X_new.drop('Location',axis=1,inplace=True)
-
+        
         def get_month(date):
             return date.split('-')[1]
 
@@ -631,13 +631,13 @@ elif selection == 'Réaliser une prédiction':
         X_new['year_month']= year+"-"+month
         # changement de type de donnée des colonnes month, day, et year
         X_new = X_new.astype({'month':'int64'})
-
+        #X_new['Date']=df[df['month']==X_new['month']].loc[0,'Date']
         X_new['RainToday']= X_new['RainToday'].replace({'No':0,'Yes':1})
         X_new.drop('year',axis=1,inplace=True)
 
         # encoder les variables de X_new
         #la = load('label_encoder.joblib')
-        from sklearn.preprocessing import LabelEncoder
+        #from sklearn.preprocessing import LabelEncoder
         la = LabelEncoder()
 
         l=['Date', 'WindGustDir', 'WindDir9am', 'WindDir3pm', 'year_month'] 
@@ -664,12 +664,12 @@ elif selection == 'Réaliser une prédiction':
         elif modele =="XGboost":
             y_new_prob = xgb.predict_proba(X_new)
         elif modele =="Réseau de neurones dense":
-            y_new_prob = model.predict_proba(X_new)
+            y_new_prob = model.predict(X_new)
         else:
             st.write("Vous n'avez sélectionné aucun modèle")
 
-        st.write('La probabilité de pluie pour demain est de :', y_new_prob*100)
-        if y_new_prob > 0.5:
+        st.write('La probabilité de pluie pour demain est de :', y_new_prob[0][1]*100)
+        if y_new_prob[0][1] > 0.5:
             st.write('Vous devriez penser à prendre votre parapluie demain !')
 
             image = Image.open('umbrella.png')
